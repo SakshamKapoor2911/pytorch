@@ -69,7 +69,7 @@ def _add_op_to_registry(registry, op, fn):
     If op is OpOverload, it will be added to the registry directly.
     If op is OpOverloadPacket, all the valid overload_ops in the packet will be added to the registry.
     """
-    overloads: list[torch._ops.OperatorBase] = []
+    overloads: list[torch._ops.OpOverload] = []
     if isinstance(op, HigherOrderOperator):
         # There's no concept of overloads for HigherOrderOperator
         registry[op] = fn
@@ -89,6 +89,13 @@ def _add_op_to_registry(registry, op, fn):
         # to filter those out, e.g aten.add.float_int
         if torch._C._dispatch_has_kernel(op_overload.name()):
             registry[op_overload] = fn
+            schema = op_overload._schema
+            if registry is decomposition_table:
+                torch._C._fake_dispatch_register_decomp(
+                    schema.name, schema.overload_name
+                )
+            elif registry is meta_table:
+                torch._C._fake_dispatch_register_meta(schema.name, schema.overload_name)
 
 
 def _convert_out_params(f):
