@@ -2627,7 +2627,6 @@ class rocm:
         "gfx90a",
         "gfx942",
         "gfx950",
-        "gfx1250",
     ]
 
     # Optimization level, use to balance compilation speed and runtime performance.
