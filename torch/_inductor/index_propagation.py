@@ -175,11 +175,19 @@ class SymPyOps:
     @staticmethod
     def minimum(x: TypedExpr, y: TypedExpr) -> TypedExpr:
         result_type = torch.promote_types(x.dtype, y.dtype)
+        if result_type == torch.bool:
+            # sympy.Min/Max require orderable args; booleans are not comparable
+            # and raise "The argument 'False' is not comparable." Fall back to
+            # the regular ops handler for boolean min/max.
+            return NotImplemented
         return TypedExpr(Min(x.expr, y.expr), result_type)
 
     @staticmethod
     def maximum(x: TypedExpr, y: TypedExpr) -> TypedExpr:
         result_type = torch.promote_types(x.dtype, y.dtype)
+        if result_type == torch.bool:
+            # See minimum: booleans are not orderable for sympy.Min/Max.
+            return NotImplemented
         return TypedExpr(Max(x.expr, y.expr), result_type)
 
 

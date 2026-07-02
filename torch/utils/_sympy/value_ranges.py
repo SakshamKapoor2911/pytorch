@@ -911,10 +911,20 @@ class SymPyValueRangeAnalysis:
 
     @classmethod
     def minimum(cls, a, b):
+        a, b = ValueRanges.wrap(a), ValueRanges.wrap(b)
+        if a.is_bool or b.is_bool:
+            # min of booleans is logical-and; sympy.Min is undefined on
+            # booleans (they are not orderable).
+            return cls.and_(a, b)
         return cls.min_or_max(a, b, sympy.Min)
 
     @classmethod
     def maximum(cls, a, b):
+        a, b = ValueRanges.wrap(a), ValueRanges.wrap(b)
+        if a.is_bool or b.is_bool:
+            # max of booleans is logical-or; sympy.Max is undefined on
+            # booleans (they are not orderable).
+            return cls.or_(a, b)
         return cls.min_or_max(a, b, sympy.Max)
 
     @staticmethod
