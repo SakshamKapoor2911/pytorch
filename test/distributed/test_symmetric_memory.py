@@ -252,6 +252,7 @@ class SymmetricMemoryTest(MultiProcContinuousTest):
     @requires_cuda
     def test_allow_overlapping_devices(self) -> None:
         os.environ["TORCH_SYMM_MEM_ALLOW_OVERLAPPING_DEVICES"] = "1"
+        os.environ["TORCH_SYMMMEM_IMPLICIT_POOL"] = "0"
         t = symm_mem.empty(64, device="cuda:0")
         symm_mem_hdl = symm_mem.rendezvous(t, group=dist.group.WORLD)
 
@@ -265,7 +266,8 @@ class SymmetricMemoryTest(MultiProcContinuousTest):
             else:
                 self.assertEqual(buf.device, t.device)
 
-        os.environ["TORCH_SYMM_MEM_ALLOW_OVERLAPPING_DEVICES"] = "0"
+        os.environ.pop("TORCH_SYMM_MEM_ALLOW_OVERLAPPING_DEVICES", None)
+        os.environ.pop("TORCH_SYMMMEM_IMPLICIT_POOL", None)
 
     @skipIf(
         not PLATFORM_SUPPORTS_SYMM_MEM, "SymmMem is not supported on this ROCm arch"
