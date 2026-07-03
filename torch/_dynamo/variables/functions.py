@@ -1752,7 +1752,7 @@ class UserMethodVariable(UserFunctionVariable):
         return super().getattro_impl(tx, name)
 
     def get_real_python_backed_value(self) -> Any:
-        return self.fn
+        return NO_SUCH_SUBOBJ
 
 
 class WrappedUserMethodVariable(UserMethodVariable):
