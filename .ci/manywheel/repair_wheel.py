@@ -327,9 +327,21 @@ def repair_wheel(
         # Bundle GPU-specific shared libs (currently only ROCm uses this).
         # Copy follows symlinks so versioned sonames become real files we can
         # rename to their bare .so form to match what the wheel links against.
+        #
+        # This is done in two passes on purpose: ALL libs are copied first, then
+        # the NEEDED entries are rewritten. replace_needed() rewrites matching
+        # entries across every .so already in the tree, so if the rewrite ran
+        # inline during the copy loop, any lib copied *after* its dependency
+        # would keep a stale versioned NEEDED (e.g. librocprofiler-sdk.so, copied
+        # late, would retain "libamd_comgr.so.3" instead of the bundled bare
+        # "libamd_comgr.so"). That unresolved-in-wheel soname falls through to
+        # the system ROCm libs, which for librocprofiler-sdk drags in a
+        # kfd-topology probe that deadlocks `import torch` on hosts without
+        # /dev/kfd. Rewriting in a final pass mirrors the pre-#182696
+        # build_common.sh behavior and keeps the wheel self-contained.
         for lib in bundled_libs:
-            dest = torch_lib / lib.dest_name
-            shutil.copy(lib.src, dest)
+            shutil.copy(lib.src, torch_lib / lib.dest_name)
+        for lib in bundled_libs:
             if lib.needed_alias:
                 replace_needed(torch_dir, lib.needed_alias, lib.dest_name)
 
