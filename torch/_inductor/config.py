@@ -1847,6 +1847,16 @@ class triton:
     Config specific to codegen/triton.py
     """
 
+    # TorchTLX (Triton Language eXtensions) template mode. TLX ships in the FB
+    # Triton fork (fbtriton / triton-beta); this knob is a no-op on OAI triton
+    # and triton-stable, where the integration is not importable.
+    #   "default": TLX disabled.
+    #   "allow":   TLX templates compete with other backends via autotuning.
+    #   "force":   only TLX templates are used.
+    tlx_mode: Literal["default", "allow", "force"] = os.environ.get(
+        "TORCHINDUCTOR_TLX_MODE", "default"
+    )  # type: ignore[assignment]
+
     # Use cudagraphs on output code
     cudagraphs = os.environ.get("TORCHINDUCTOR_CUDAGRAPHS") == "1"
 
